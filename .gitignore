@@ -1,8 +1,10 @@
+docs/
+coverage/
+node_modules/
+out/
+
 .DS_Store
 .idea
-node_modules/
-coverage/
-
 .zuulrc
 npm-debug.log
 sauce.json

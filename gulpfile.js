@@ -63,7 +63,7 @@ gulp.task('test:mocha', ['coverage'], function() {
 });
 
 gulp.task('clean', function() {
-   return Promise.all([del('dist/*'), del('coverage/*')]);
+   return Promise.all([del('dist/'), del('coverage/')]);
 });
 
 gulp.task('build', function() {

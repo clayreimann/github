@@ -1,302 +1,125 @@
-/*!
- * @overview  Github.js
- *
- * @copyright (c) 2013 Michael Aufreiter, Development Seed
- *            Github.js is freely distributable.
- *
- * @license   Licensed under BSD-3-Clause-Clear
- *
- *            For all details and documentation:
- *            http://substance.io/michael/github
- */
 'use strict';
+/**
+ * @file
+ * @copyright  2013 Michael Aufreiter (Development Seed) and 2016 Yahoo Inc.
+ * @license    Licensed under {@link https://spdx.org/licenses/BSD-3-Clause-Clear.html BSD-3-Clause-Clear}.
+ *             Github.js is freely distributable.
+ */
 
 var Utf8 = require('utf8');
 var axios = require('axios');
 var Base64 = require('base-64');
 var Promise = require('es6-promise');
 
-function b64encode(string) {
-   return Base64.encode(Utf8.encode(string));
-}
-
-if (Promise.polyfill) {
-   Promise.polyfill();
-}
+// function b64encode(string) {
+//    return Base64.encode(Utf8.encode(string));
+// }
+//
+// if (Promise.polyfill) {
+//    Promise.polyfill();
+// }
 
 // Initial Setup
 // -------------
 
 function Github(options) {
-   options = options || {};
+   // options = options || {};
+   //
+   // var API_URL = options.apiUrl || 'https://api.github.com';
+   //
+   // var _request = Github._request = function _request(method, path, data, cb, raw) {
+   //    function getURL() {
+   //       var url = path.indexOf('//') >= 0 ? path : API_URL + path;
+   //
+   //       url += ((/\?/).test(url) ? '&' : '?');
+   //
+   //       if (data && typeof data === 'object' && ['GET', 'HEAD', 'DELETE'].indexOf(method) > -1) {
+   //          for (var param in data) {
+   //             if (data.hasOwnProperty(param)) {
+   //                url += '&' + encodeURIComponent(param) + '=' + encodeURIComponent(data[param]);
+   //             }
+   //          }
+   //       }
+   //
+   //       return url.replace(/(&timestamp=\d+)/, '') +
+   //          (typeof window !== 'undefined' ? '&timestamp=' + new Date().getTime() : '');
+   //    }
+   //
+   //    var config = {
+   //       headers: {
+   //          Accept: raw ? 'application/vnd.github.v3.raw+json' : 'application/vnd.github.v3+json',
+   //          'Content-Type': 'application/json;charset=UTF-8'
+   //       },
+   //       method: method,
+   //       data: data ? data : {},
+   //       url: getURL()
+   //    };
+   //
+   //    if ((options.token) || (options.username && options.password)) {
+   //       config.headers.Authorization = options.token ?
+   //       'token ' + options.token :
+   //       'Basic ' + b64encode(options.username + ':' + options.password);
+   //    }
+   //
+   //    return axios(config)
+   //       .then(function(response) {
+   //          cb(
+   //             null,
+   //             response.data || true,
+   //             response
+   //          );
+   //       }, function(response) {
+   //          if (response.status === 304) {
+   //             cb(
+   //                null,
+   //                response.data || true,
+   //                response
+   //             );
+   //          } else {
+   //             cb({
+   //                path: path,
+   //                request: response,
+   //                error: response.status
+   //             });
+   //          }
+   //       });
+   // };
+   //
+   // var _requestAllPages = Github._requestAllPages = function _requestAllPages(path, singlePage, cb) {
+   //    var results = [];
+   //
+   //    (function iterate() {
+   //       _request('GET', path, null, function(err, res, xhr) {
+   //          if (err) {
+   //             return cb(err);
+   //          }
+   //
+   //          if (!(res instanceof Array)) {
+   //             res = [res];
+   //          }
+   //
+   //          results.push.apply(results, res);
+   //
+   //          var next = (xhr.headers.link || '')
+   //             .split(',')
+   //             .filter(function(link) {
+   //                return /rel="next"/.test(link);
+   //             })
+   //             .map(function(link) {
+   //                return (/<(.*)>/.exec(link) || [])[1];
+   //             })
+   //             .pop();
+   //
+   //          if (!next || singlePage) {
+   //             cb(err, results, xhr);
+   //          } else {
+   //             path = next;
+   //             iterate();
+   //          }
+   //       });
+   //    })();
+   // };
 
-   var API_URL = options.apiUrl || 'https://api.github.com';
-
-   var _request = Github._request = function _request(method, path, data, cb, raw) {
-      function getURL() {
-         var url = path.indexOf('//') >= 0 ? path : API_URL + path;
-
-         url += ((/\?/).test(url) ? '&' : '?');
-
-         if (data && typeof data === 'object' && ['GET', 'HEAD', 'DELETE'].indexOf(method) > -1) {
-            for(var param in data) {
-               if (data.hasOwnProperty(param)) {
-                  url += '&' + encodeURIComponent(param) + '=' + encodeURIComponent(data[param]);
-               }
-            }
-         }
-
-         return url.replace(/(&timestamp=\d+)/, '') +
-            (typeof window !== 'undefined' ? '&timestamp=' + new Date().getTime() : '');
-      }
-
-      var config = {
-         headers: {
-            Accept: raw ? 'application/vnd.github.v3.raw+json' : 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json;charset=UTF-8'
-         },
-         method: method,
-         data: data ? data : {},
-         url: getURL()
-      };
-
-      if ((options.token) || (options.username && options.password)) {
-         config.headers.Authorization = options.token ?
-         'token ' + options.token :
-         'Basic ' + b64encode(options.username + ':' + options.password);
-      }
-
-      return axios(config)
-         .then(function(response) {
-            cb(
-               null,
-               response.data || true,
-               response
-            );
-         }, function(response) {
-            if (response.status === 304) {
-               cb(
-                  null,
-                  response.data || true,
-                  response
-               );
-            } else {
-               cb({
-                  path: path,
-                  request: response,
-                  error: response.status
-               });
-            }
-         });
-   };
-
-   var _requestAllPages = Github._requestAllPages = function _requestAllPages(path, singlePage, cb) {
-      var results = [];
-
-      (function iterate() {
-         _request('GET', path, null, function(err, res, xhr) {
-            if (err) {
-               return cb(err);
-            }
-
-            if (!(res instanceof Array)) {
-               res = [res];
-            }
-
-            results.push.apply(results, res);
-
-            var next = (xhr.headers.link || '')
-               .split(',')
-               .filter(function(link) {
-                  return /rel="next"/.test(link);
-               })
-               .map(function(link) {
-                  return (/<(.*)>/.exec(link) || [])[1];
-               })
-               .pop();
-
-            if (!next || singlePage) {
-               cb(err, results, xhr);
-            } else {
-               path = next;
-               iterate();
-            }
-         });
-      })();
-   };
-
-   // User API
-   // =======
-
-   Github.User = function() {
-      this.repos = function(options, cb) {
-         if (typeof options === 'function') {
-            cb = options;
-            options = {};
-         }
-
-         options = options || {};
-
-         var url = '/user/repos';
-         var params = [];
-
-         params.push('type=' + encodeURIComponent(options.type || 'all'));
-         params.push('sort=' + encodeURIComponent(options.sort || 'updated'));
-         params.push('per_page=' + encodeURIComponent(options.per_page || '100')); // jscs:ignore
-
-         if (options.page) {
-            params.push('page=' + encodeURIComponent(options.page));
-         }
-
-         url += '?' + params.join('&');
-
-         _requestAllPages(url, !!options.page, cb);
-      };
-
-      // List user organizations
-      // -------
-
-      this.orgs = function(cb) {
-         _request('GET', '/user/orgs', null, cb);
-      };
-
-      // List authenticated user's gists
-      // -------
-
-      this.gists = function(cb) {
-         _request('GET', '/gists', null, cb);
-      };
-
-      // List authenticated user's unread notifications
-      // -------
-
-      this.notifications = function(options, cb) {
-         if (typeof options === 'function') {
-            cb = options;
-            options = {};
-         }
-
-         options = options || {};
-         var url = '/notifications';
-         var params = [];
-
-         if (options.all) {
-            params.push('all=true');
-         }
-
-         if (options.participating) {
-            params.push('participating=true');
-         }
-
-         if (options.since) {
-            var since = options.since;
-
-            if (since.constructor === Date) {
-               since = since.toISOString();
-            }
-
-            params.push('since=' + encodeURIComponent(since));
-         }
-
-         if (options.before) {
-            var before = options.before;
-
-            if (before.constructor === Date) {
-               before = before.toISOString();
-            }
-
-            params.push('before=' + encodeURIComponent(before));
-         }
-
-         if (options.page) {
-            params.push('page=' + encodeURIComponent(options.page));
-         }
-
-         if (params.length > 0) {
-            url += '?' + params.join('&');
-         }
-
-         _request('GET', url, null, cb);
-      };
-
-      // Show user information
-      // -------
-
-      this.show = function(username, cb) {
-         var command = username ? '/users/' + username : '/user';
-
-         _request('GET', command, null, cb);
-      };
-
-      // List user repositories
-      // -------
-
-      this.userRepos = function(username, options, cb) {
-         if (typeof options === 'function') {
-            cb = options;
-            options = {};
-         }
-
-         var url = '/users/' + username + '/repos';
-         var params = [];
-
-         params.push('type=' + encodeURIComponent(options.type || 'all'));
-         params.push('sort=' + encodeURIComponent(options.sort || 'updated'));
-         params.push('per_page=' + encodeURIComponent(options.per_page || '100')); // jscs:ignore
-
-         if (options.page) {
-            params.push('page=' + encodeURIComponent(options.page));
-         }
-
-         url += '?' + params.join('&');
-
-         _requestAllPages(url, !!options.page, cb);
-      };
-
-      // List user starred repositories
-      // -------
-
-      this.userStarred = function(username, cb) {
-         // Github does not always honor the 1000 limit so we want to iterate over the data set.
-         var request = '/users/' + username + '/starred?type=all&per_page=100';
-
-         _requestAllPages(request, false, cb);
-      };
-
-      // List a user's gists
-      // -------
-
-      this.userGists = function(username, cb) {
-         _request('GET', '/users/' + username + '/gists', null, cb);
-      };
-
-      // List organization repositories
-      // -------
-
-      this.orgRepos = function(orgname, cb) {
-         // Github does not always honor the 1000 limit so we want to iterate over the data set.
-         var request = '/orgs/' + orgname + '/repos?type=all&&page_num=100&sort=updated&direction=desc';
-
-         _requestAllPages(request, false, cb);
-      };
-
-      this.follow = function(username, cb) {
-         _request('PUT', '/user/following/' + username, null, cb);
-      };
-
-      // Unfollow user
-      // -------
-
-      this.unfollow = function(username, cb) {
-         _request('DELETE', '/user/following/' + username, null, cb);
-      };
-
-      // Create a repo
-      // -------
-      this.createRepo = function(options, cb) {
-         _request('POST', '/user/repos', options, cb);
-      };
-   };
 
    Github.Organization = function() {
       // Create an Organization repo
@@ -428,8 +251,8 @@ function Github(options) {
                params.push('page=' + options.page);
             }
 
-            if (options.per_page) {
-               params.push('per_page=' + options.per_page);
+            if (options.perPage) {
+               params.push('per_page=' + options.perPage);
             }
          }
 
@@ -563,8 +386,8 @@ function Github(options) {
 
       this.updateTree = function(baseTree, path, blob, cb) {
          var data = {
-            base_tree: baseTree,
-            tree: [
+            'base_tree': baseTree,
+            'tree': [
                {
                   path: path,
                   mode: '100644',
@@ -970,79 +793,6 @@ function Github(options) {
       };
    };
 
-   // Gists API
-   // =======
-
-   Github.Gist = function(options) {
-      var id = options.id;
-      var gistPath = '/gists/' + id;
-
-      // Read the gist
-      // --------
-
-      this.read = function(cb) {
-         _request('GET', gistPath, null, cb);
-      };
-
-      // Create the gist
-      // --------
-      // {
-      //  "description": "the description for this gist",
-      //    "public": true,
-      //    "files": {
-      //      "file1.txt": {
-      //        "content": "String file contents"
-      //      }
-      //    }
-      // }
-
-      this.create = function(options, cb) {
-         _request('POST', '/gists', options, cb);
-      };
-
-      // Delete the gist
-      // --------
-
-      this.delete = function(cb) {
-         _request('DELETE', gistPath, null, cb);
-      };
-
-      // Fork a gist
-      // --------
-
-      this.fork = function(cb) {
-         _request('POST', gistPath + '/fork', null, cb);
-      };
-
-      // Update a gist with the new stuff
-      // --------
-
-      this.update = function(options, cb) {
-         _request('PATCH', gistPath, options, cb);
-      };
-
-      // Star a gist
-      // --------
-
-      this.star = function(cb) {
-         _request('PUT', gistPath + '/star', null, cb);
-      };
-
-      // Untar a gist
-      // --------
-
-      this.unstar = function(cb) {
-         _request('DELETE', gistPath + '/star', null, cb);
-      };
-
-      // Check if a gist is starred
-      // --------
-
-      this.isStarred = function(cb) {
-         _request('GET', gistPath + '/star', null, cb);
-      };
-   };
-
    // Issues API
    // ==========
 
@@ -1075,39 +825,6 @@ function Github(options) {
 
       this.get = function(issue, cb) {
          _request('GET', path + '/' + issue, null, cb);
-      };
-   };
-
-   // Search API
-   // ==========
-
-   Github.Search = function(options) {
-      var path = '/search/';
-      var query = '?q=' + options.query;
-
-      this.repositories = function(options, cb) {
-         _request('GET', path + 'repositories' + query, options, cb);
-      };
-
-      this.code = function(options, cb) {
-         _request('GET', path + 'code' + query, options, cb);
-      };
-
-      this.issues = function(options, cb) {
-         _request('GET', path + 'issues' + query, options, cb);
-      };
-
-      this.users = function(options, cb) {
-         _request('GET', path + 'users' + query, options, cb);
-      };
-   };
-
-   // Rate Limit API
-   // ==========
-
-   Github.RateLimit = function() {
-      this.getRateLimit = function(cb) {
-         _request('GET', '/rate_limit', null, cb);
       };
    };
 
